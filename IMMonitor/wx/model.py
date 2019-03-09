@@ -268,13 +268,6 @@ class WxGroupMessage(Base):
     user_uin = db.Column(db.String(80), comment='哪个账号的群消息')
     group_id = db.Column(db.Integer, comment='群组id')
     MsgId = db.Column(db.Integer, comment='微信返回的消息id')
-<<<<<<< HEAD
-    GroupNickName = db.Column(db.String(80), comment='群名')
-    GroupUserName = db.Column(db.String(80)
-                             , comment='群的标识name（以@@开头，每次登录返回的都不一样）')
-=======
-
->>>>>>> 3750e9ca4cb7a61bc5e01cad24f75c34e7f1b919
     FromUserName = db.Column(db.String(80)
                              , comment='消息发送人name（@开头，每次登录返回的都不一样）')
     FromUserNickName = db.Column(db.String(80), comment='消息发送人的昵称')
