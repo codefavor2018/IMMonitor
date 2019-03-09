@@ -83,11 +83,6 @@
             console.log(res)
             if (res.code == 200) {
                 console.log('res data', res.data)
-                console.log('res.data.Url', res.data.Url)
-                src = res.data.Url + '/webwxgeticon?username='
-                 + res.data.UserName 
-                 + '&skey=' + res.data.Skey
-                $('#HeadImgUrl').attr('src', src)
             }
         })
     })
@@ -136,8 +131,9 @@
                             console.log(res)
                             if (res.code == 200) {
                                 if (res.data){
-                                    for (var i = 0; i < res.data.group_msg_list.length; i++) {
-                                        group_msg = res.data.group_msg_list[i]
+                                    group_msg_list = res.data.group_msg_list.msg_list
+                                    for (var i = 0; i < group_msg_list.length; i++) {
+                                        group_msg = group_msg_list[i]
                                         groupNickName =  group_msg.GroupNickName  // 群名
                                         fromUserNickName = group_msg.FromUserNickName  // 昵称
                                         fromUserDisplayName = group_msg.FromUserDisplayName  // 群里面显示的昵称

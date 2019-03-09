@@ -10,7 +10,7 @@
 from IMMonitor import app, ret_val
 from IMMonitor.wx.contact import proxy
 from flask import jsonify, Blueprint
-from IMMonitor.wx.contact.utils import groups_username_from_contacts, save_group_contact_list_by_nickname
+from IMMonitor.wx.contact.utils import groups_username_from_contacts, save_group_contact_list
 
 bp_wx_contact = Blueprint('bp_wx_contact', __name__)
 
@@ -43,9 +43,7 @@ def get_group_contact():
         if group_contact_res['code'] == ret_val.CODE_SUCCESS:
             group_contact_list = group_contact_res['data']['group_contact_list']
 
-            # 第一次拿到群列表时，以群的nickname作为唯一ID存储群主列表
-            # 这是为了避免多次存储群消息
-            save_group_contact_list_by_nickname(group_contact_list)
+            save_group_contact_list(group_contact_list)
             return jsonify(ret_val.gen(ret_val.CODE_SUCCESS,
                                        data=group_contact_list,
                                        extra_msg='提取群组信息成功'))

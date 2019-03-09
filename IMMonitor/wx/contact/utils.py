@@ -44,7 +44,7 @@ def groups_from_contacts(contact_list):
 
 
 
-def save_group_contact_list_by_nickname(group_contact_list):
+def save_group_contact_list(group_contact_list):
     """
     以存储群组列表
     :param group_contact_list:
@@ -92,7 +92,7 @@ def save_group_contact_list_by_nickname(group_contact_list):
         # 所以先深拷贝一下，以免修改到原来的对象
         group_copy = copy.deepcopy(group_contact)
         group_copy.pop('MemberList')
-        WxGroup.save_by_nickname(group_dict=group_copy)
+        WxGroup.save_one(group_dict=group_copy, user_uin=user_uin)
 
         for group_member in group_contact['MemberList']:
             group_member['user_uin'] = user_uin
@@ -106,7 +106,7 @@ def save_group_contact_list_by_nickname(group_contact_list):
         WxGroupMember.batch_insert(groupmember_list=group_contact['MemberList'])
 
 
-def update_group_contact_list_by_username(group_contact_list):
+def update_group_contact_list(group_contact_list):
     """
     以username作为唯一ID存储群组列表
     通常用于更新群组信息
@@ -124,7 +124,7 @@ def update_group_contact_list_by_username(group_contact_list):
         # 所以先深拷贝一下，以免修改到原来的对象
         group_copy = copy.deepcopy(group_contact)
         group_copy.pop('MemberList')
-        WxGroup.save_by_username(group_dict=group_copy)
+        WxGroup.save_one(group_dict=group_copy, user_uin=user_uin)
 
         for group_member in group_contact['MemberList']:
             group_member['user_uin'] = user_uin

@@ -98,14 +98,15 @@ def produce_group_chat(msg, loginInfo):
         return
     else:
         # 群组名称
-        msg['GroupUserName'] = group.UserName
-        msg['GroupNickName'] = group.NickName
+        msg['group_id'] = group.id
         # 找到发信息的成员
         member = WxGroupMember.find_one(group_username=chatroomUserName, member_username=actualUserName)
-        print('find groupuser;', member)
+
         # TODO 如果没有找到该成员的处理
         if not member:
+
             return
+
 
         # 如果更新后找到发送消息成员的信息
         else:
@@ -150,8 +151,7 @@ def merge_msg(msg, msg_all, user_uin):
     new_msg = copy.deepcopy(msg)
     new_msg['user_uin'] = user_uin
     new_msg['MsgId'] = msg_all['MsgId']
-    new_msg['GroupNickName'] = msg_all['GroupNickName']
-    new_msg['GroupUserName'] = msg_all['GroupUserName']
+    new_msg['group_id'] = msg_all['group_id']
     new_msg['FromUserName'] = msg_all['FromUserName']
     new_msg['FromUserNickName'] = msg_all['FromUserNickName']
     new_msg['FromUserDisplayName'] = msg_all['FromUserDisplayName']
@@ -180,14 +180,7 @@ def produce_group_msg(msgList):
 
     # 遍历消息列表
     for m in msgList:
-        # 如果信息发送人为自己
-        if m['FromUserName'] == loginInfo['username']:
-            # 实际接收人 为 我发出的那段信息的 接收人
-            actualOpposite = m['ToUserName']
-        # 如果信息发送人不是我自己
-        else:
-            # 实际接收人 为 信息的发送人
-            actualOpposite = m['FromUserName']
+
         # 判断信息是否来自群组, 群组信息存在@@标志位
         if '@@' in m['FromUserName'] or '@@' in m['ToUserName']:
             # 群组处理信息, 判断信息别人发送还是自己发送, 填写关键信息
@@ -198,6 +191,17 @@ def produce_group_msg(msgList):
         # 消息来自非群组, 跳过循环
         else:
             continue
+
+
+        # # 如果信息发送人为自己
+        # if m['FromUserName'] == loginInfo['username']:
+        #     # 实际接收人 为 我发出的那段信息的 接收人
+        #     actualOpposite = m['ToUserName']
+        # # 如果信息发送人不是我自己
+        # else:
+        #     # 实际接收人 为 信息的发送人
+        #     actualOpposite = m['FromUserName']
+
 
         # 地图或者文本信息
         if m['MsgType'] == 1:
@@ -292,7 +296,3 @@ def produce_group_msg(msgList):
 
     print(ret_msg_list)
     return ret_msg_list
-
-
-# def save_group_msg(group_msg_list):
-#     for

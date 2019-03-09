@@ -122,19 +122,20 @@ class WxGroup(Base):
     IsOwner = db.Column(db.String(3))
 
     @classmethod
-    def save_by_nickname(cls, group_dict, uin):
+    def save_one(cls, group_dict, user_uin):
         """
         以群的昵称（nickname）作为唯一ID存储群组信息
         通常用在第一次登录的时候
         :param group_dict: 群组信息字典
-        :return:
+        :param user_uin: 用户uin
+        :return: bool
         """
         existed = False
         # 先用group的昵称作为唯一ID来找该群组
         # 1、通常用在登录的时候，假设退出登录到登录期间的群名没有发生变化，则继续保存该群的信息
         #    如果登录的时候，退出登录到登录期间的群名发生了变化，则只能把它作为一个新群
         # 2、也可用在登录期间，如果某种原因导致群的username发生变化但是群名没变，可以使用该方法
-        group = cls.query.filter_by(and_(NickName=group_dict['NickName'], user_uin=uin)).first()
+        group = db.session.query(cls).filter(and_(cls.NickName == group_dict['NickName'], cls.user_uin == user_uin)).first()
         if group:
             existed = True
 
@@ -142,7 +143,8 @@ class WxGroup(Base):
         # 1、由于每次登录时的username都会变，所以重新登录时用这种方法肯定找不到该群
         # 2、这里只是适用于在登录期间群名发生了变化但是群的username发生变化的情况
         if not group:
-            group = cls.query.filter_by(UserName=group_dict['UserName']).first()
+            group = db.session.query(cls).filter(
+                and_(cls.UserName == group_dict['UserName'], cls.user_uin == user_uin)).first()
             if group:
                 existed = True
             else:
@@ -167,40 +169,6 @@ class WxGroup(Base):
             except Exception as err:
                 logging.log(logging.ERROR, repr(err))
                 return False
-
-    @classmethod
-    def save_by_username(cls, group_dict):
-        """
-        以群的标识名username（@@开头，每次登录都会变）作为唯一ID存储群组信息
-        通常用在群信息出现变动的时候（群名改变、群成员改名等）
-        :param group_dict:
-        :return:
-        """
-        group = cls.query.filter_by(UserName=group_dict['UserName']).first()
-        existed = True
-        if not group:
-            existed = False
-            group = WxGroup()
-
-        for key in group_dict.keys():
-            setattr(group, key, str(group_dict[key]))
-
-        if existed:
-            try:
-                db.session.commit()
-                return True
-            except Exception as err:
-                logging.log(logging.ERROR, repr(err))
-                return False
-        else:
-            try:
-                db.session.add(group)
-                db.session.commit()
-                return True
-            except Exception as err:
-                logging.log(logging.ERROR, repr(err))
-                return False
-
 
     @classmethod
     def find_one(cls, user_name):
@@ -298,10 +266,15 @@ class WxGroupMember(Base):
 class WxGroupMessage(Base):
     id = db.Column(db.Integer, primary_key=True, comment='自增id')
     user_uin = db.Column(db.String(80), comment='哪个账号的群消息')
+    group_id = db.Column(db.Integer, comment='群组id')
     MsgId = db.Column(db.Integer, comment='微信返回的消息id')
+<<<<<<< HEAD
     GroupNickName = db.Column(db.String(80), comment='群名')
     GroupUserName = db.Column(db.String(80)
                              , comment='群的标识name（以@@开头，每次登录返回的都不一样）')
+=======
+
+>>>>>>> 3750e9ca4cb7a61bc5e01cad24f75c34e7f1b919
     FromUserName = db.Column(db.String(80)
                              , comment='消息发送人name（@开头，每次登录返回的都不一样）')
     FromUserNickName = db.Column(db.String(80), comment='消息发送人的昵称')
