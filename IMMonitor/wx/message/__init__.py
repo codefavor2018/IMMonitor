@@ -9,7 +9,7 @@
 
 from IMMonitor import app, ret_val
 from IMMonitor.wx.message import proxy, utils
-from flask import jsonify, Blueprint
+from flask import jsonify, Blueprint, request
 from IMMonitor.wx.model import *
 from IMMonitor.wx.contact.utils import groups_from_contacts, update_group_contact_list_by_username
 from IMMonitor.analysis.model import MsgDetectResult
@@ -48,3 +48,19 @@ def get_msg():
                                    }))
     else:
         return jsonify(ret)
+
+
+@app.route('/wx/message/send_msg')
+def send_raw_msg():
+    """
+    发送消息, 目前只支持文字
+    TODO: 支持发送图片、语音、视频等
+    :return:
+    """
+    content = request.args.get('content')
+    to_username = request.args.get('to_username')
+    if not content or not to_username:
+        return jsonify(ret_val.gen(ret_val.CODE_PARAMS_ERR, extra_msg='需要传入 content, to_username 参数'))
+
+    ret = proxy.send_raw_msg(1, content=content, toUserName=to_username)
+    return jsonify(ret)

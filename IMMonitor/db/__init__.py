@@ -9,6 +9,7 @@
 
 from IMMonitor.user.model import *
 from IMMonitor.wx.model import *
+from IMMonitor.analysis.model import MsgDetectResult
 from IMMonitor.db.common import app, db
 
 def init_database():

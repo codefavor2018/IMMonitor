@@ -136,3 +136,4 @@ def update_group_contact_list_by_username(group_contact_list):
             # 这里因为在已登录的时候收到了更新群列表的操作
             # 以username(@)信息作为唯一ID更新群成员的时候
             WxGroupMember.save_by_username(group_member)
+            print('save user %s ' % group_contact['NickName'])

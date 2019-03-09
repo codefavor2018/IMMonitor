@@ -265,220 +265,27 @@ def produce_group_chat(msg, loginInfo):
         msg_formatter(msg, 'Content')
 
 
+def send_raw_msg(msgType, content, toUserName):
+    loginInfo = session.get(SESSION_KEY.WxLoginInfo)
+    url = '%s/webwxsendmsg' % loginInfo['url']
+    data = {
+        'BaseRequest': getBaseRequest(),
+        'Msg': {
+            'Type': msgType,
+            'Content': content,
+            'FromUserName': loginInfo['username'],
+            'ToUserName': toUserName,
+            'LocalID': int(time.time() * 1e4),
+            'ClientMsgId': int(time.time() * 1e4),
+        },
+        'Scene': 0, }
+    headers = {'ContentType': 'application/json; charset=UTF-8', 'User-Agent': config.USER_AGENT}
+    r = s.post(url, headers=headers,
+                    data=json.dumps(data, ensure_ascii=False).encode('utf8'))
 
-# def produce_msg(msgdict):
-#     # 获取消息类表
-#     msgList = msgdict.get('AddMsgList')
-#     # 从session中获取登录用户的信息
-#     loginInfo = session.get(SESSION_KEY.WxLoginInfo)
-#     # 消息列表
-#     rl = []
-#     # 无用消息类型列表码
-#     srl = [40, 43, 50, 52, 53, 9999]
-#     # 遍历消息列表
-#     for m in msgList:
-#         # 如果信息发送人为自己
-#         if m['FromUserName'] == loginInfo['username']:
-#             # 实际接收人 为 我发出的那段信息的 接收人
-#             actualOpposite = m['ToUserName']
-#         # 如果信息发送人不是我自己
-#         else:
-#             # 实际接收人 为 信息的发送人
-#             actualOpposite = m['FromUserName']
-#         # 判断信息是否来自群组, 群组信息存在@@标志位
-#         if '@@' in m['FromUserName'] or '@@' in m['ToUserName']:
-#             # 群组处理信息, 判断信息别人发送还是自己发送, 填写关键信息
-#             produce_group_chat(m, loginInfo)
-#         # 消息来自非群组
-#         else:
-#             # 消息的格式化处理,解决一些网页微信的bug
-#             msg_formatter(m, 'Content')
-#         # 如果信息将要发给的对象是群组
-#         if '@@' in actualOpposite:
-#             # 从个人库中或者临时库中查询userName为待发群组名的群组
-#             m['User'] = search_chatrooms(url=loginInfo['url'], userName=actualOpposite)
-#         # 如果消息的类型是文本, 1代表文本
-#         if m['MsgType'] == 1:
-#             # 判断信息是否为地图, 如果m['Url']存在,表示为地图
-#             if m['Url']:
-#                 # 正则表达式, 匹配括号前与括号内的内容,
-#                 # 因为地图信息格式为：贵阳科技大厦（贵阳市观山湖区八音路2号）+url格式的地图地址
-#                 # 目前存在不能接受显示地图信息
-#                 regx = r'(.+?\(.+?\))'
-#                 data = re.search(regx, m['Content'])
-#                 # 如果内容不存在, data为Map否者为正则匹配到的内容
-#                 data = 'Map' if data is None else data.group(1)
-#                 msg = {
-#                     'Type': 'Map',
-#                     'Text': data, }
-#             # 如果为常规文本信息
-#             else:
-#                 msg = {
-#                     'Type': 'Text',
-#                     'Text': m['Content'], }
-#         # 如果消息的类型是图片或者动画表情
-#         elif m['MsgType'] == 3 or m['MsgType'] == 47:
-#             # 得到下载图像或者表情的文件流
-#             download_fn = get_download_fn(
-#                 url='%s/webwxgetmsgimg' % loginInfo['url'],
-#                 msgId=m['NewMsgId'],
-#                 loginInfo=loginInfo
-#             )
-#             msg = {
-#                 # 文件类型为图像
-#                 'Type': 'Picture',
-#                 # 文件名为png或则gif格式时间戳
-#                 'FileName': '%s.%s' % (time.strftime('%y%m%d-%H%M%S', time.localtime()),
-#                                        'png' if m['MsgType'] == 3 else 'gif'),
-#                 # 文件内容为下载对象
-#                 'Text': download_fn, }
-#         # 如果信息类型为语音
-#         elif m['MsgType'] == 34:
-#             # 得到下载函数对象
-#             download_fn = get_download_fn(
-#                 url='%s/webwxgetvoice' % loginInfo['url'],
-#                 msgId=m['NewMsgId'],
-#                 loginInfo=loginInfo
-#             )
-#             msg = {
-#                 # 消息类型为语音
-#                 'Type': 'Recording',
-#                 # 文件名为时间戳+MP3
-#                 'FileName': '%s.mp3' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
-#                 # 文件内容为下载函数对象的指针地址
-#                 'Text': download_fn, }
-#         # 如果消息类型好友申请确认消息
-#         elif m['MsgType'] == 37:
-#             # 信息的用户名
-#             m['User']['UserName'] = m['RecommendInfo']['UserName']
-#             msg = {
-#                 # 消息类型为好友确认消息
-#                 'Type': 'Friends',
-#                 'Text': {
-#                     'status': m['Status'],
-#                     'userName': m['RecommendInfo']['UserName'],
-#                     'verifyContent': m['Ticket'],
-#                     'autoUpdate': m['RecommendInfo'], }, }
-#             m['User'].verifyDict = msg['Text']
-#         # 如果消息为共享名片
-#         elif m['MsgType'] == 42:
-#             msg = {
-#                 'Type': 'Card',
-#                 'Text': m['RecommendInfo'], }
-#         # 如果消息类型为微视频
-#         elif m['MsgType'] in (43, 62):
-#             # 信息id
-#             msgId = m['MsgId']
-#             # 视频下载函数
-#             def download_video(videoDir=None):
-#                 # 视频下载的url
-#                 url = '%s/webwxgetvideo' % loginInfo['url']
-#                 # 请求参数
-#                 params = {
-#                     'msgid': msgId,
-#                     'skey': loginInfo['skey'], }
-#                 # 请求头
-#                 headers = {'Range': 'bytes=0-', 'User-Agent': config.USER_AGENT}
-#                 # 发起get请求
-#                 r = s.get(url, params=params, headers=headers, stream=True)
-#                 # 二进制写入文件
-#                 tempStorage = io.BytesIO()
-#                 # 写入文件
-#                 for block in r.iter_content(1024):
-#                     tempStorage.write(block)
-#                 return tempStorage.getvalue()
-#             # 规范msg的格式
-#             msg = {
-#                 'Type': 'Video',
-#                 'FileName': '%s.mp4' % time.strftime('%y%m%d-%H%M%S', time.localtime()),
-#                 'Text': download_video, }
-#         # 消息类型为分享链接
-#         elif m['MsgType'] == 49:
-#             # 如果为聊天记录
-#             if m['AppMsgType'] == 0:
-#                 msg = {
-#                     'Type': 'Note',
-#                     'Text': m['Content'], }
-#             # 如果为附件链接
-#             elif m['AppMsgType'] == 6:
-#                 rawMsg = m
-#                 # 获取文件名以及路径
-#                 cookiesList = {name: data for name, data in s.cookies.items()}
-#                 # 下载附件
-#                 def download_atta(attaDir=None):
-#                     url = loginInfo['fileUrl'] + '/webwxgetmedia'
-#                     params = {
-#                         'sender': rawMsg['FromUserName'],
-#                         'mediaid': rawMsg['MediaId'],
-#                         'filename': rawMsg['FileName'],
-#                         'fromuser': loginInfo['wxuin'],
-#                         'pass_ticket': 'undefined',
-#                         'webwx_data_ticket': cookiesList['webwx_data_ticket'], }
-#                     headers = {'User-Agent': config.USER_AGENT}
-#                     r = s.get(url, params=params, stream=True, headers=headers)
-#                     tempStorage = io.BytesIO()
-#                     for block in r.iter_content(1024):
-#                         tempStorage.write(block)
-#
-#                     return tempStorage.getvalue()
-#                 msg = {
-#                     'Type': 'Attachment',
-#                     'Text': download_atta, }
-#             # 如果为动图链接
-#             elif m['AppMsgType'] == 8:
-#                 download_fn = get_download_fn(
-#                     url='%s/webwxgetmsgimg' % loginInfo['url'],
-#                     msgId=m['NewMsgId'],
-#                     loginInfo=loginInfo
-#                 )
-#                 msg = {
-#                     'Type': 'Picture',
-#                     'FileName': '%s.gif' % (
-#                         time.strftime('%y%m%d-%H%M%S', time.localtime())),
-#                     'Text': download_fn, }
-#             #
-#             elif m['AppMsgType'] == 17:
-#                 msg = {
-#                     'Type': 'Note',
-#                     'Text': m['FileName'], }
-#             elif m['AppMsgType'] == 2000:
-#                 regx = r'\[CDATA\[(.+?)\][\s\S]+?\[CDATA\[(.+?)\]'
-#                 data = re.search(regx, m['Content'])
-#                 if data:
-#                     data = data.group(2).split(u'\u3002')[0]
-#                 else:
-#                     data = 'You may found detailed info in Content key.'
-#                 msg = {
-#                     'Type': 'Note',
-#                     'Text': data, }
-#             else:
-#                 msg = {
-#                     'Type': 'Sharing',
-#                     'Text': m['FileName'], }
-#         # 系统信息
-#         elif m['MsgType'] == 10000:
-#             msg = {
-#                 'Type': 'Note',
-#                 'Text': m['Content'], }
-#         # 撤回消息
-#         elif m['MsgType'] == 10002:
-#             regx = r'\[CDATA\[(.+?)\]\]'
-#             data = re.search(regx, m['Content'])
-#             data = 'System message' if data is None else data.group(1).replace('\\', '')
-#             msg = {
-#                 'Type': 'Note',
-#                 'Text': data, }
-#         # 无用消息类型
-#         elif m['MsgType'] in srl:
-#             msg = {
-#                 'Type': 'Useless',
-#                 'Text': 'UselessMsg', }
-#         # 无用消息类型
-#         else:
-#             msg = {
-#                 'Type': 'Useless',
-#                 'Text': 'UselessMsg', }
-#         # 拼接字典m与msg
-#         m = dict(m, **msg)
-#         rl.append(m)
-#     return rl
+    response = json.loads(r.content.decode('utf-8', 'replace'))
+    if response['BaseResponse']['Ret'] != 0:
+        return ret_val.gen(ret_val.CODE_PROXY_ERR,
+                           extra_msg='Error get msg ! 消息发送失败 !')
+    else:
+        return ret_val.gen(ret_val.CODE_SUCCESS)

@@ -10,6 +10,8 @@
 import json
 import logging
 
+from sqlalchemy import and_
+
 from IMMonitor.db.common import db, Base
 from IMMonitor.wx import config
 
@@ -120,19 +122,32 @@ class WxGroup(Base):
     IsOwner = db.Column(db.String(3))
 
     @classmethod
-    def save_by_nickname(cls, group_dict):
+    def save_by_nickname(cls, group_dict, uin):
         """
         以群的昵称（nickname）作为唯一ID存储群组信息
         通常用在第一次登录的时候
         :param group_dict: 群组信息字典
         :return:
         """
-        # group = cls.query.filter_by(UserName=group_dict['UserName']).first()
-        group = cls.query.filter_by(NickName=group_dict['NickName']).first()
-        existed = True
+        existed = False
+        # 先用group的昵称作为唯一ID来找该群组
+        # 1、通常用在登录的时候，假设退出登录到登录期间的群名没有发生变化，则继续保存该群的信息
+        #    如果登录的时候，退出登录到登录期间的群名发生了变化，则只能把它作为一个新群
+        # 2、也可用在登录期间，如果某种原因导致群的username发生变化但是群名没变，可以使用该方法
+        group = cls.query.filter_by(and_(NickName=group_dict['NickName'], user_uin=uin)).first()
+        if group:
+            existed = True
+
+        # 然后再以group的username作为唯一ID来找群
+        # 1、由于每次登录时的username都会变，所以重新登录时用这种方法肯定找不到该群
+        # 2、这里只是适用于在登录期间群名发生了变化但是群的username发生变化的情况
         if not group:
-            existed = False
-            group = WxGroup()
+            group = cls.query.filter_by(UserName=group_dict['UserName']).first()
+            if group:
+                existed = True
+            else:
+                group = cls()
+                existed = False
 
         for key in group_dict.keys():
             setattr(group, key, str(group_dict[key]))

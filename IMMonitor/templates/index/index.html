@@ -17,6 +17,9 @@
 <button id="btn_getmsg">第五步：接收新消息</button><br>
 
 <button id="btn_lunxun">轮训消息检查，收发新消息</button><br>
+
+消息：<input type="text" id="msg_content">
+<button id="btn_send_msg">发送消息给某个群</button><br>
 <div id="msg">
     <p></p>
 </div>
@@ -26,8 +29,14 @@
 <button id="btn_receive">接收消息</button> -->
 <img src="" alt="" id="qr_img" style="width: 200px; height: 200px;">
 
+<img src="" alt="" id="HeadImgUrl" style="width: 200px; height: 200px;">
+<!-- <img src="https://wx2.qq.com/cgi-bin/mmwebwx-bin/webwxgeticon?&username=@9a6149aee31631f85bd64292c6c1ef08&skey=@crypt_3b31a11b_ced471d5354ad56503f953c64dd5186f" alt=""> -->
+
 <p id="retmsg"></p>
 <script>
+    var group_usernames = []
+    var username = ''
+
     var WxProxyRequseting = {
         check_login: false,
         sync_check: false
@@ -72,6 +81,14 @@
     $("#btn_wxinit").on("click", function() {
         $.get("/wx/login/init", function(res){
             console.log(res)
+            if (res.code == 200) {
+                console.log('res data', res.data)
+                console.log('res.data.Url', res.data.Url)
+                src = res.data.Url + '/webwxgeticon?username='
+                 + res.data.UserName 
+                 + '&skey=' + res.data.Skey
+                $('#HeadImgUrl').attr('src', src)
+            }
         })
     })
 
@@ -95,6 +112,13 @@
     $("#btn_get_group_contact").on("click", function() {
         $.get("/wx/contact/get_group_contact", function(res){
             console.log(res)
+            if (res.code == 200) {
+                group_list = res.data
+                for (var i = 0; i < group_list.length; i++) {
+                    group = group_list[i]
+                    group_usernames.push(group.UserName)
+                }
+            }
         })
     })
     
@@ -165,6 +189,15 @@
 
     $("#btn_lunxun").on("click", function() {
         lunxun()
+    })
+
+    $("#btn_send_msg").on("click", function() {
+        content = $("#msg_content").val()
+        group_username = group_usernames[0]
+        $.get('/wx/message/send_msg?content=' + content + '&to_username=' + group_username)
+        .then(function (res) {
+            console.log(res)
+        })
     })
 
 </script>

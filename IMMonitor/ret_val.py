@@ -10,6 +10,7 @@
 
 CODE_SUCCESS = 200
 CODE_PROXY_ERR = 424
+CODE_PARAMS_ERR = 400
 CODE_INNER_ERR = 500
 CODE_SOCKET_ERR = 1001
 
@@ -27,6 +28,7 @@ def gen(code, data={}, extra_msg=''):
     code_trans = {
         200: '成功',
         424: '请求代理发生错误',
+        400: '请求参数有误',
         500: '服务器内部错误',
         1001: 'WebSocket连接错误'
     }
