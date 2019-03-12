@@ -251,4 +251,3 @@ def unify_detect_result(msg_type, msg_id, result):
 # result_unify = unify_detect_result('Text', '1111', result)
 # print(result)
 # print(result_unify)
-
